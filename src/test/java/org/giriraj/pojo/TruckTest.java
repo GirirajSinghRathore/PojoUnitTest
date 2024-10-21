@@ -16,8 +16,12 @@ class TruckTest {
                 .test();
     }
     @Test
-    void testTructWithPojoTester(){
-        PojoTester.testPojo(Truck.class);
+    void testTructWithPojoTester() throws Exception {
+        new PojoTester<>(Truck.class)
+                .test(PojoTester.Setters.class)
+                .test(PojoTester.Getters.class)
+                .test(PojoTester.ToString.class)
+                .build(); // Executes the tests
     }
 
 }
