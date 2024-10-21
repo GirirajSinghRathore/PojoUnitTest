@@ -3,18 +3,21 @@ package org.giriraj.pojo;
 import lombok.Builder;
 import lombok.Data;
 
+import java.sql.Date;
+import java.sql.Timestamp;
+import java.util.HashMap;
+import java.util.Map;
+
 @Data
 @Builder
 public class Truck  {
-    String wheels;
-//    String color;
-//    String model;
-//    String make;
+    private String wheels;
 
-    //settr for wheels
-//    public void setWheels(String wheels) {
-//        this.wheels = "asdsasdsd";
-//    }
+
+    public static Map<String,String> getAbc(){
+        Map<String,String> map = new HashMap<>();
+        return map;
+    }
 
 
 }

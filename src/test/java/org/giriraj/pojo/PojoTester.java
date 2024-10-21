@@ -98,7 +98,7 @@ public class PojoTester<T> {
     // Test getters to ensure that they return the correct values
     private void testGetters(T instance) throws Exception {
         for (Method method : clazz.getDeclaredMethods()) {
-            if (isGetter(method)) {
+            if (isGetter(method, clazz)) {
                 String fieldName = method.getName().startsWith("get")
                         ? method.getName().substring(3)
                         : method.getName().substring(2);
@@ -127,9 +127,32 @@ public class PojoTester<T> {
         return method.getName().startsWith("set") && method.getParameterCount() == 1;
     }
 
-    private boolean isGetter(Method method) {
-        return (method.getName().startsWith("get") && method.getParameterCount() == 0)
+    private boolean isGetter(Method method, Class<?> clazz) {
+        // Check if the method is static
+        if (Modifier.isStatic(method.getModifiers())) {
+            return false; // Ignore static methods
+        }
+
+        // Check if the method is a valid getter
+        boolean isValidGetter = (method.getName().startsWith("get") && method.getParameterCount() == 0)
                 || (method.getName().startsWith("is") && method.getParameterCount() == 0);
+
+        // If it's a valid getter, ensure it corresponds to an instance field
+        if (isValidGetter) {
+            String fieldName = method.getName().startsWith("get") ?
+                    method.getName().substring(3) : method.getName().substring(2);
+            fieldName = Character.toLowerCase(fieldName.charAt(0)) + fieldName.substring(1); // convert to camelCase
+
+            // Check if the field exists in the class
+            try {
+                clazz.getDeclaredField(fieldName);
+                return true; // The method is a valid getter for an instance field
+            } catch (NoSuchFieldException e) {
+                return false; // No corresponding field found
+            }
+        }
+
+        return false; // Not a valid getter
     }
 
     // Dummy value generator for test data
