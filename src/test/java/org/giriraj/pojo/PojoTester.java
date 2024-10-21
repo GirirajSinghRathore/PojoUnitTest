@@ -3,7 +3,6 @@ package org.giriraj.pojo;
 import java.lang.reflect.*;
 import java.util.Arrays;
 import java.util.Comparator;
-import java.util.Objects;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class PojoTester<T> {
@@ -32,7 +31,11 @@ public class PojoTester<T> {
                 testGetters(instance);
             } else if (test == ToString.class) {
                 testToString(instance);
-            } // Add more test cases as needed
+            } else if (test == HashCode.class) {
+                testHashCode(instance);
+            } else if (test == Equals.class) {
+                testEquals(instance);
+            }
         }
         return this;
     }
@@ -122,6 +125,36 @@ public class PojoTester<T> {
         assertTrue(toStringResult.contains(clazz.getSimpleName()), "toString() should contain class name");
     }
 
+    // Test hashCode method to ensure it's consistent and follows the contract
+    private void testHashCode(T instance) throws Exception {
+        int hashCode1 = instance.hashCode();
+        int hashCode2 = instance.hashCode();
+
+        assertEquals(hashCode1, hashCode2, "hashCode() should return consistent values");
+    }
+
+    // Test equals method to ensure it follows contract
+    private void testEquals(T instance) throws Exception {
+        // Reflexive: x.equals(x) must be true
+        assertTrue(instance.equals(instance), "equals() failed reflexive test");
+
+        // Symmetric: x.equals(y) == y.equals(x)
+        T otherInstance = createInstance(); // Create another instance
+        assertEquals(instance.equals(otherInstance), otherInstance.equals(instance), "equals() failed symmetric test");
+
+        // Transitive: if x.equals(y) and y.equals(z), then x.equals(z)
+        T thirdInstance = createInstance();
+        if (instance.equals(otherInstance) && otherInstance.equals(thirdInstance)) {
+            assertTrue(instance.equals(thirdInstance), "equals() failed transitive test");
+        }
+
+        // Consistency: Multiple calls must consistently return the same value
+        assertEquals(instance.equals(otherInstance), instance.equals(otherInstance), "equals() failed consistency test");
+
+        // Null comparison: x.equals(null) must be false
+        assertFalse(instance.equals(null), "equals() failed null comparison test");
+    }
+
     // Utility methods to check if the method is a setter or getter
     private boolean isSetter(Method method) {
         return method.getName().startsWith("set") && method.getParameterCount() == 1;
@@ -172,8 +205,10 @@ public class PojoTester<T> {
         return Character.toLowerCase(name.charAt(0)) + name.substring(1);
     }
 
-    // Nested classes to represent test cases (Setters, Getters, ToString, etc.)
+    // Nested classes to represent test cases (Setters, Getters, ToString, HashCode, Equals, etc.)
     public static class Setters { }
     public static class Getters { }
     public static class ToString { }
+    public static class HashCode { }
+    public static class Equals { }
 }

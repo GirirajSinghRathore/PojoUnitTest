@@ -21,6 +21,8 @@ class TruckTest {
                 .test(PojoTester.Setters.class)
                 .test(PojoTester.Getters.class)
                 .test(PojoTester.ToString.class)
+                .test(PojoTester.HashCode.class)
+                .test(PojoTester.Equals.class)
                 .build(); // Executes the tests
     }
 
