@@ -143,7 +143,7 @@ public class PojoTester<T> {
         assertTrue(instance.equals(instance), "equals() failed reflexive test");
 
         // Symmetric: x.equals(y) == y.equals(x)
-        T otherInstance = createInstance(); // Create another instance
+        T otherInstance = createInstanceWithNonNullFields(); // Create another instance with non-null fields
         assertEquals(instance.equals(otherInstance), otherInstance.equals(instance), "equals() failed symmetric test");
 
         // Transitive: if x.equals(y) and y.equals(z), then x.equals(z)
@@ -184,6 +184,127 @@ public class PojoTester<T> {
             // Reset the field to its original value
             field.set(fieldModifiedInstance, originalValue);
         }
+
+        // --------------- Testing with Non-Null Fields ---------------
+
+        // Populate fields with non-null values
+        T nonNullInstance = createInstanceWithNonNullFields();
+
+        // Reflexive: x.equals(x) must still be true with non-null values
+        assertTrue(nonNullInstance.equals(nonNullInstance), "equals() failed reflexive test with non-null fields");
+
+        // Symmetric: Test symmetric property with non-null values
+        assertEquals(nonNullInstance.equals(instance), instance.equals(nonNullInstance), "equals() failed symmetric test with non-null fields");
+
+        // Consistency test with non-null fields
+        assertEquals(nonNullInstance.equals(instance), nonNullInstance.equals(instance), "equals() failed consistency test with non-null fields");
+
+        // Testing inequality after modifying non-null fields
+        for (Field field : fields) {
+            field.setAccessible(true);
+
+            // Modify the non-null instance for field comparison
+            T modifiedNonNullInstance = createInstanceWithNonNullFields();
+            Object originalValue = field.get(modifiedNonNullInstance);
+            Object differentValue = getDifferentValue(field.getType(), originalValue);
+
+            if (differentValue != null) {
+                field.set(modifiedNonNullInstance, differentValue);
+                assertFalse(nonNullInstance.equals(modifiedNonNullInstance), "equals() failed with modified non-null field " + field.getName());
+            }
+        }
+    }
+    // Method to create an instance using the builder if available or constructor
+    private T createInstanceWithNonNullFields() throws Exception {
+        T instance = createInstance(); // Create the instance using your existing logic
+
+        // Populate fields with non-null values
+        Field[] fields = clazz.getDeclaredFields();
+        for (Field field : fields) {
+            field.setAccessible(true);
+            Object value = field.get(instance);
+
+            if (value == null) {
+                Object nonNullValue = getNonNullValueForField(field.getType());
+                field.set(instance, nonNullValue); // Set a non-null value for the field
+            }
+        }
+
+        return instance;
+    }
+
+    // Helper method to return a non-null value based on the field type
+    private Object getNonNullValueForField(Class<?> fieldType) {
+        if (fieldType.equals(String.class)) {
+            return "defaultString"; // Set a default string value
+        }
+        if (fieldType.equals(int.class) || fieldType.equals(Integer.class)) {
+            return 1; // Set a default integer value
+        }
+        if (fieldType.equals(boolean.class) || fieldType.equals(Boolean.class)) {
+            return true; // Set a default boolean value
+        }
+        if (fieldType.equals(double.class) || fieldType.equals(Double.class)) {
+            return 1.0; // Set a default double value
+        }
+        if (fieldType.equals(long.class) || fieldType.equals(Long.class)) {
+            return 1L; // Set a default long value
+        }
+        if (fieldType.equals(Date.class)) {
+            return new Date(System.currentTimeMillis()); // Set a default Date value
+        }
+        if (fieldType.equals(Timestamp.class)) {
+            return new Timestamp(System.currentTimeMillis()); // Set a default Timestamp value
+        }
+
+        // Add more types as needed
+        return null; // Return null for unsupported types
+    }
+    /**
+     * Create an instance with non-null field values.
+     */
+    private T createNonNullInstance(Class<?> clazz) throws Exception {
+        T instance = (T) clazz.getDeclaredConstructor().newInstance();
+
+        // Set non-null values for all fields
+        Field[] fields = clazz.getDeclaredFields();
+        for (Field field : fields) {
+            field.setAccessible(true);
+            Object nonNullValue = getNonNullValue(field.getType());
+            field.set(instance, nonNullValue);
+        }
+
+        return instance;
+    }
+
+    /**
+     * Generate non-null value for fields based on their type.
+     */
+    private Object getNonNullValue(Class<?> fieldType) {
+        if (fieldType.equals(String.class)) {
+            return "nonNullString";
+        }
+        if (fieldType.equals(int.class) || fieldType.equals(Integer.class)) {
+            return 1;
+        }
+        if (fieldType.equals(boolean.class) || fieldType.equals(Boolean.class)) {
+            return true;
+        }
+        if (fieldType.equals(double.class) || fieldType.equals(Double.class)) {
+            return 1.0;
+        }
+        if (fieldType.equals(long.class) || fieldType.equals(Long.class)) {
+            return 1L;
+        }
+        if (fieldType.equals(Date.class)) {
+            return new Date(System.currentTimeMillis());
+        }
+        if (fieldType.equals(Timestamp.class)) {
+            return new Timestamp(System.currentTimeMillis());
+        }
+
+        // Handle other types if needed
+        return null;
     }
 
     /**
