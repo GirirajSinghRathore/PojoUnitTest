@@ -135,6 +135,8 @@ public class PojoTester<T> {
 
     // Test equals method to ensure it follows contract
     private void testEquals(T instance) throws Exception {
+        Class<?> clazz = instance.getClass();
+
         // Reflexive: x.equals(x) must be true
         assertTrue(instance.equals(instance), "equals() failed reflexive test");
 
@@ -153,6 +155,52 @@ public class PojoTester<T> {
 
         // Null comparison: x.equals(null) must be false
         assertFalse(instance.equals(null), "equals() failed null comparison test");
+
+        // Additional test: x.equals(object of a different class) must be false
+        Object nonSameClassObject = new Object();
+        assertFalse(instance.equals(nonSameClassObject), "equals() failed different class comparison");
+
+        // Test unequal field values: Iterate over all fields of the class
+        Field[] fields = clazz.getDeclaredFields();
+
+        for (Field field : fields) {
+            field.setAccessible(true);
+
+            // Create another instance for field comparison
+            T fieldModifiedInstance = createInstance();
+
+            // Modify the current field to a different value
+            Object originalValue = field.get(fieldModifiedInstance);
+            Object differentValue = getDifferentValue(field.getType(), originalValue);
+
+            // Skip modification if different value couldn't be generated (e.g., no alternative value available)
+            if (differentValue != null) {
+                field.set(fieldModifiedInstance, differentValue);
+                assertFalse(instance.equals(fieldModifiedInstance), "equals() failed when field " + field.getName() + " was different");
+            }
+
+            // Reset the field to its original value
+            field.set(fieldModifiedInstance, originalValue);
+        }
+    }
+
+    /**
+     * Generate a different value for the field based on its type.
+     * This method can be enhanced to handle more types if necessary.
+     */
+    private Object getDifferentValue(Class<?> fieldType, Object originalValue) {
+        if (fieldType.equals(String.class)) {
+            return "differentString"; // Return a different string value
+        }
+        if (fieldType.equals(int.class) || fieldType.equals(Integer.class)) {
+            return (originalValue != null && originalValue.equals(1)) ? 2 : 1; // Return a different integer value
+        }
+        if (fieldType.equals(boolean.class) || fieldType.equals(Boolean.class)) {
+            return !(Boolean) originalValue; // Flip the boolean value
+        }
+        // Handle other types (double, long, etc.) similarly
+        // Return null for types we don't handle or can't modify
+        return null;
     }
 
     // Utility methods to check if the method is a setter or getter
