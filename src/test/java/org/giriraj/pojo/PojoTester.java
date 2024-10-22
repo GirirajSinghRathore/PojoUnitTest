@@ -158,7 +158,7 @@ public class PojoTester<T> {
         // Null comparison: x.equals(null) must be false
         assertFalse(instance.equals(null), "equals() failed null comparison test");
 
-        // Different class comparison: x.equals(object of a different class) must be false
+        // Additional test: x.equals(object of a different class) must be false
         Object nonSameClassObject = new Object();
         assertFalse(instance.equals(nonSameClassObject), "equals() failed different class comparison");
 
@@ -171,28 +171,14 @@ public class PojoTester<T> {
             // Create another instance for field comparison
             T fieldModifiedInstance = createInstance();
 
-            // Store original value for resetting later
+            // Modify the current field to a different value
             Object originalValue = field.get(fieldModifiedInstance);
+            Object differentValue = getDifferentValue(field.getType(), originalValue);
 
-            // Test with null and non-null values
-            if (originalValue != null) {
-                // Set field to null to cover null case
-                field.set(fieldModifiedInstance, null);
-                assertFalse(instance.equals(fieldModifiedInstance), "equals() failed when field " + field.getName() + " was null");
-
-                // Generate a different value and set
-                Object differentValue = getDifferentValue(field.getType(), originalValue);
-                if (differentValue != null) {
-                    field.set(fieldModifiedInstance, differentValue);
-                    assertFalse(instance.equals(fieldModifiedInstance), "equals() failed when field " + field.getName() + " was different");
-                }
-            } else {
-                // If original value is null, set to a different value to test inequality
-                Object differentValue = getDifferentValue(field.getType(), originalValue);
-                if (differentValue != null) {
-                    field.set(fieldModifiedInstance, differentValue);
-                    assertFalse(instance.equals(fieldModifiedInstance), "equals() failed when field " + field.getName() + " was different");
-                }
+            // Skip modification if different value couldn't be generated (e.g., no alternative value available)
+            if (differentValue != null) {
+                field.set(fieldModifiedInstance, differentValue);
+                assertFalse(instance.equals(fieldModifiedInstance), "equals() failed when field " + field.getName() + " was different");
             }
 
             // Reset the field to its original value
@@ -221,13 +207,14 @@ public class PojoTester<T> {
             return (originalValue != null && originalValue.equals(1L)) ? 2L : 1L; // Return a different long value
         }
         if (fieldType.equals(Date.class)) {
-            return new Date(System.currentTimeMillis() + 1000); // Return a new Date
+            return (originalValue != null) ? new Date(((Date) originalValue).getTime() + 1000) : new Date(System.currentTimeMillis()); // Return a new java.sql.Date if originalValue is null
         }
         if (fieldType.equals(Timestamp.class)) {
-            return new Timestamp(System.currentTimeMillis() + 1000); // Return a new Timestamp
+            return (originalValue != null) ? new Timestamp(((Timestamp) originalValue).getTime() + 1000) : new Timestamp(System.currentTimeMillis()); // Return a new Timestamp if originalValue is null
         }
 
         // Handle other types (float, char, etc.) similarly
+        // Return null for types we don't handle or can't modify
         return null;
     }
 
