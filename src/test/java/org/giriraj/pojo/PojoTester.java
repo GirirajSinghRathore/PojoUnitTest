@@ -129,12 +129,23 @@ public class PojoTester<T> {
 
     // Test hashCode method to ensure it's consistent and follows the contract
     private void testHashCode(T instance) throws Exception {
+        // Generate the hashCode for the first time
         int hashCode1 = instance.hashCode();
+
+        // Generate the hashCode for the second time and assert consistency
         int hashCode2 = instance.hashCode();
-
         assertEquals(hashCode1, hashCode2, "hashCode() should return consistent values");
-    }
 
+        // Test non-null fields scenario
+        T instanceWithNonNullFields = createInstanceWithNonNullFields(); // Ensure fields are not null
+        int hashCodeWithNonNullFields1 = instanceWithNonNullFields.hashCode();
+        int hashCodeWithNonNullFields2 = instanceWithNonNullFields.hashCode();
+        assertEquals(hashCodeWithNonNullFields1, hashCodeWithNonNullFields2, "hashCode() with non-null fields should return consistent values");
+
+        // Ensure that two distinct instances with different field values do not have the same hashCode
+        T differentInstance = createInstanceWithNonNullFields(); // Modify some fields to ensure difference
+        assertNotEquals(instance.hashCode(), differentInstance.hashCode(), "Different instances should not have the same hashCode");
+    }
     // Test equals method to ensure it follows contract
     private void testEquals(T instance) throws Exception {
         Class<?> clazz = instance.getClass();
