@@ -1,6 +1,8 @@
 package org.giriraj.pojo;
 
 import java.lang.reflect.*;
+import java.sql.Date;
+import java.sql.Timestamp;
 import java.util.Arrays;
 import java.util.Comparator;
 import static org.junit.jupiter.api.Assertions.*;
@@ -198,7 +200,20 @@ public class PojoTester<T> {
         if (fieldType.equals(boolean.class) || fieldType.equals(Boolean.class)) {
             return !(Boolean) originalValue; // Flip the boolean value
         }
-        // Handle other types (double, long, etc.) similarly
+        if (fieldType.equals(double.class) || fieldType.equals(Double.class)) {
+            return (originalValue != null && originalValue.equals(1.0)) ? 2.0 : 1.0; // Return a different double value
+        }
+        if (fieldType.equals(long.class) || fieldType.equals(Long.class)) {
+            return (originalValue != null && originalValue.equals(1L)) ? 2L : 1L; // Return a different long value
+        }
+        if (fieldType.equals(Date.class)) {
+            return (originalValue != null) ? new Date(((Date) originalValue).getTime() + 1000) : new Date(System.currentTimeMillis()); // Return a new java.sql.Date if originalValue is null
+        }
+        if (fieldType.equals(Timestamp.class)) {
+            return (originalValue != null) ? new Timestamp(((Timestamp) originalValue).getTime() + 1000) : new Timestamp(System.currentTimeMillis()); // Return a new Timestamp if originalValue is null
+        }
+
+        // Handle other types (float, char, etc.) similarly
         // Return null for types we don't handle or can't modify
         return null;
     }
